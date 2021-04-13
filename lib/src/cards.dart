@@ -6,6 +6,8 @@ import 'animations.dart';
 import 'controller.dart';
 import 'swip_info.dart';
 
+typedef DragCallback(bool isLeft, bool isRight);
+typedef DragStopCallback(bool isLeft, bool isRight);
 typedef ForwardCallback(int index, SwipInfo info);
 typedef BackCallback(int index, SwipInfo info);
 typedef EndCallback();
@@ -30,14 +32,14 @@ class TCard extends StatefulWidget {
   /// 卡片控制器
   final TCardController? controller;
 
-  /// 控制Y轴
-  final bool lockYAxis;
-
   /// How quick should it be slided? less is slower. 10 is a bit slow. 20 is a quick enough.
   final double slideSpeed;
 
   /// How long does it have to wait until the next slide is sliable? less is quicker. 100 is fast enough. 500 is a bit slow.
   final int delaySlideFor;
+
+  final DragCallback? dragCallback;
+  final DragStopCallback? dragStopCallback;
 
   const TCard({
     required this.cards,
@@ -45,9 +47,10 @@ class TCard extends StatefulWidget {
     this.onForward,
     this.onBack,
     this.onEnd,
-    this.lockYAxis = false,
     this.slideSpeed = 20,
     this.delaySlideFor = 500,
+    this.dragCallback,
+    this.dragStopCallback,
     this.size = const Size(380, 400),
   })  : assert(cards != null),
         assert(cards.length > 0);
@@ -322,33 +325,41 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
   }
 
   // Stop animations
-  void _stop() {
+  void stop() {
     _reboundController.stop();
     _cardChangeController.stop();
     _cardReverseController.stop();
   }
 
   // 更新最前面卡片的位置
-  void _updateFrontCardAlignment(DragUpdateDetails details, Size size) {
+  void updateFrontCardAlignment(DragUpdateDetails details, Size size) {
     // 卡片移动速度 widget.slideSpeed
     _frontCardAlignment += Alignment(
       details.delta.dx / (size.width / 2) * widget.slideSpeed,
-      widget.lockYAxis
-          ? 0
-          : details.delta.dy / (size.height / 2) * widget.slideSpeed,
+      0,
     );
 
     // 设置最前面卡片的旋转角度
     _frontCardRotation = _frontCardAlignment.x;
+
+    if (widget.dragCallback != null) {
+      widget.dragCallback
+          ?.call((_frontCardAlignment.x < 0), (_frontCardAlignment.x > 0));
+    }
+
     setState(() {});
   }
 
   // 判断是否进行动画
-  void _judgeRunAnimation(DragEndDetails details, Size size) {
+  void judgeRunAnimation(DragEndDetails details, Size size) {
     // 卡片横轴距离限制
     final double limit = 10.0;
     final bool isSwipLeft = _frontCardAlignment.x < -limit;
     final bool isSwipRight = _frontCardAlignment.x > limit;
+
+    if (widget.dragStopCallback != null) {
+      widget.dragStopCallback?.call(isSwipLeft, isSwipRight);
+    }
 
     // 判断是否运行向前的动画，否则回弹
     if (isSwipLeft || isSwipRight) {
@@ -441,14 +452,14 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
               _cardChangeController.status != AnimationStatus.forward
                   ? SizedBox.expand(
                       child: GestureDetector(
-                        onPanDown: (DragDownDetails details) {
-                          _stop();
+                        onHorizontalDragDown: (DragDownDetails details) {
+                          stop();
                         },
-                        onPanUpdate: (DragUpdateDetails details) {
-                          _updateFrontCardAlignment(details, size);
+                        onHorizontalDragUpdate: (DragUpdateDetails details) {
+                          updateFrontCardAlignment(details, size);
                         },
-                        onPanEnd: (DragEndDetails details) {
-                          _judgeRunAnimation(details, size);
+                        onHorizontalDragEnd: (DragEndDetails details) {
+                          judgeRunAnimation(details, size);
                         },
                       ),
                     )
