@@ -38,6 +38,8 @@ class TCard extends StatefulWidget {
   /// How long does it have to wait until the next slide is sliable? less is quicker. 100 is fast enough. 500 is a bit slow.
   final int delaySlideFor;
 
+  final double throwingDistance;
+
   final DragCallback? dragCallback;
   final DragStopCallback? dragStopCallback;
 
@@ -52,6 +54,7 @@ class TCard extends StatefulWidget {
     this.dragCallback,
     this.dragStopCallback,
     this.size = const Size(380, 400),
+    this.throwingDistance = 0.7,
   })  : assert(cards != null),
         assert(cards.length > 0);
 
@@ -341,11 +344,11 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
 
     // 设置最前面卡片的旋转角度
     _frontCardRotation = _frontCardAlignment.x;
-    final double limit = 7.0;
-    
+
     if (widget.dragCallback != null) {
-      widget.dragCallback
-          ?.call((_frontCardAlignment.x < -limit), (_frontCardAlignment.x > limit));
+      widget.dragCallback?.call(
+          (_frontCardAlignment.x < -widget.throwingDistance),
+          (_frontCardAlignment.x > widget.throwingDistance));
     }
 
     setState(() {});
@@ -354,9 +357,8 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
   // 判断是否进行动画
   void judgeRunAnimation(DragEndDetails details, Size size) {
     // 卡片横轴距离限制
-    final double limit = 7.0;
-    final bool isSwipLeft = _frontCardAlignment.x < -limit;
-    final bool isSwipRight = _frontCardAlignment.x > limit;
+    final bool isSwipLeft = _frontCardAlignment.x < -widget.throwingDistance;
+    final bool isSwipRight = _frontCardAlignment.x > widget.throwingDistance;
 
     if (widget.dragStopCallback != null) {
       widget.dragStopCallback?.call(isSwipLeft, isSwipRight);
