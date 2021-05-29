@@ -341,10 +341,11 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
 
     // 设置最前面卡片的旋转角度
     _frontCardRotation = _frontCardAlignment.x;
-
+    final double limit = 10.0;
+    
     if (widget.dragCallback != null) {
       widget.dragCallback
-          ?.call((_frontCardAlignment.x < 0), (_frontCardAlignment.x > 0));
+          ?.call((_frontCardAlignment.x < -limit), (_frontCardAlignment.x > limit));
     }
 
     setState(() {});
