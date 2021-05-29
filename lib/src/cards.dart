@@ -341,7 +341,7 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
 
     // 设置最前面卡片的旋转角度
     _frontCardRotation = _frontCardAlignment.x;
-    final double limit = 5.0;
+    final double limit = 7.0;
     
     if (widget.dragCallback != null) {
       widget.dragCallback
@@ -354,7 +354,7 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
   // 判断是否进行动画
   void judgeRunAnimation(DragEndDetails details, Size size) {
     // 卡片横轴距离限制
-    final double limit = 5.0;
+    final double limit = 7.0;
     final bool isSwipLeft = _frontCardAlignment.x < -limit;
     final bool isSwipRight = _frontCardAlignment.x > limit;
 
